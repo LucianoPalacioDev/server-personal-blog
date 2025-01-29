@@ -1,7 +1,8 @@
 const {User} = require('../models');
 const bcrypt = require('bcryptjs');
 const {validateEmail, validatePassword} = require('../helpers/utils');
-const { generateToken } = require('../middleware/auth');
+const {generateToken} = require('../middleware/auth');
+const { Op } = require('sequelize');
 
 exports.register = async (req, res) => {
   try {
@@ -15,23 +16,36 @@ exports.register = async (req, res) => {
       return;
     }
 
-    const userExists = await User.findOne({where: {email: email}});
+    const userExists = await User.findOne({
+      where: {
+        [Op.or]: [{email: email}, {username: username}]
+      }
+    });
     if (userExists) {
-      res.status(400).send({success: false, message: 'Email is already in use!'});
+      const message =
+        userExists.email === email ? 'Email is already in use!' : 'Username is already taken!';
+      res.status(400).send({success: false, message});
       return;
     }
 
     const hashedPassword = await bcrypt.hash(password, 8);
 
-    await User.create({
+    const newUser = await User.create({
       username,
       email,
       password: hashedPassword,
     });
 
-    res.status(201).send({success: true});
+    const token = generateToken(newUser);
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+    });
+
+    res.status(201).send({success: true, token, userId: newUser.id});
   } catch (error) {
-    console.log('Error trying to register a new user: ', error.message);
+    console.log('Error trying to register a new user: ', error);
     res
       .status(400)
       .send({success: false, message: 'Something went wrong trying to create a new user'});
@@ -60,7 +74,7 @@ exports.login = async (req, res) => {
       secure: process.env.NODE_ENV === 'production',
     });
 
-    res.status(200).json({success: true, token});
+    res.status(200).json({success: true, token, userId: user.id});
   } catch (error) {
     console.error(error);
     res.status(500).json({success: false, message: 'Something went wrong trying to login'});
