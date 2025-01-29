@@ -83,8 +83,8 @@ exports.login = async (req, res) => {
 
 exports.getUserDataById = async (req, res) => {
   try {
-    const id = req.params.id;
-    const user = await User.findByPk(id);
+    const userId = req.user.id;
+    const user = await User.findByPk(userId);
 
     const formattedUserData = {
       id: user.id,
