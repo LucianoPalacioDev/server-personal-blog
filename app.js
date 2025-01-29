@@ -6,6 +6,7 @@ const port = process.env.PORT || 3000;
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
+const postsRouter = require('./routes/posts');
 
 const corsOptions = {
   origin: process.env.CLIENT_URL,
@@ -13,8 +14,10 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/posts', postsRouter);
 
 app.listen(port, () => {
   console.log(`App listening on http://localhost:${port}`);
