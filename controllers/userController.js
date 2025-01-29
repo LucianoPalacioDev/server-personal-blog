@@ -2,7 +2,7 @@ const {User} = require('../models');
 const bcrypt = require('bcryptjs');
 const {validateEmail, validatePassword} = require('../helpers/utils');
 const {generateToken} = require('../middleware/auth');
-const { Op } = require('sequelize');
+const {Op} = require('sequelize');
 
 exports.register = async (req, res) => {
   try {
@@ -18,8 +18,8 @@ exports.register = async (req, res) => {
 
     const userExists = await User.findOne({
       where: {
-        [Op.or]: [{email: email}, {username: username}]
-      }
+        [Op.or]: [{email: email}, {username: username}],
+      },
     });
     if (userExists) {
       const message =
@@ -78,5 +78,31 @@ exports.login = async (req, res) => {
   } catch (error) {
     console.log('Error trying to login the user: ', error);
     res.status(500).json({success: false, message: 'Something went wrong trying to login'});
+  }
+};
+
+exports.getUserDataById = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const user = await User.findByPk(id);
+
+    const formattedUserData = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+    };
+
+    if (user) {
+      res.status(200).send({success: true, user: formattedUserData});
+      return;
+    }
+    res
+      .status(500)
+      .json({success: false, message: 'Something went wrong trying to get the user data'});
+  } catch (error) {
+    console.log('Error trying to get the user data: ', error);
+    res
+      .status(500)
+      .json({success: false, message: 'Something went wrong trying to get the user data'});
   }
 };
