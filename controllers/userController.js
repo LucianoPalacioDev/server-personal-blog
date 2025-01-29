@@ -1,6 +1,7 @@
 const {User} = require('../models');
 const bcrypt = require('bcryptjs');
 const {validateEmail, validatePassword} = require('../helpers/utils');
+const { generateToken } = require('../middleware/auth');
 
 exports.register = async (req, res) => {
   try {
@@ -34,5 +35,34 @@ exports.register = async (req, res) => {
     res
       .status(400)
       .send({success: false, message: 'Something went wrong trying to create a new user'});
+  }
+};
+
+exports.login = async (req, res) => {
+  try {
+    const {email, password} = req.body;
+    const user = await User.findOne({where: {email}});
+
+    if (!user) {
+      return res.status(401).json({success: false, message: 'User not found.'});
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({success: false, message: 'Wrong password.'});
+    }
+
+    const token = generateToken(user);
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+    });
+
+    res.status(200).json({success: true, token});
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({success: false, message: 'Something went wrong trying to login'});
   }
 };
