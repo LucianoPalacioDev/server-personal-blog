@@ -1,5 +1,5 @@
 const {Post} = require('../models');
-const user = require('../models/user');
+const {Op} = require('sequelize');
 
 exports.createPost = async (req, res) => {
   try {
@@ -141,5 +141,38 @@ exports.getAllPostsByUser = async (req, res) => {
     res
       .status(400)
       .send({success: false, message: 'Something went wrong trying to get the all posts'});
+  }
+};
+
+exports.getAllPostsByUserFiltered = async (req, res) => {
+  try {
+    const currentUserId = req.user?.id;
+    const userIdOwner = req.params.id;
+    const searchText = req.query.searchText;
+
+    let whereQuery = {
+      user_id: userIdOwner,
+    };
+
+    if (searchText) {
+      whereQuery = {
+        ...whereQuery,
+        [Op.or]: [
+          { title: { [Op.like]: `%${searchText}%` } },
+          { content: { [Op.like]: `%${searchText}%` } },
+        ],
+      };
+    }
+
+    const posts = await Post.findAll({
+      where: whereQuery,
+    });
+
+    res.status(200).send({success: true, posts, isOwner: currentUserId === Number(userIdOwner)});
+  } catch (error) {
+    console.log('Error trying to get the all posts filtered: ', error);
+    res
+      .status(400)
+      .send({success: false, message: 'Something went wrong trying to get the all posts filtered'});
   }
 };

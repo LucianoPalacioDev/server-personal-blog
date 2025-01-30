@@ -8,4 +8,10 @@ router.post('/create', authenticateToken, postController.createPost);
 router.post('/update/:id', authenticateToken, postController.updatePost);
 router.delete('/delete/:id', authenticateToken, postController.deletePost);
 
+router.get(
+  '/getAllPostsByUserFiltered/:id',
+  authenticateToken,
+  postController.getAllPostsByUserFiltered,
+);
+
 module.exports = router;
