@@ -1,8 +1,10 @@
 const {Post} = require('../models');
+const user = require('../models/user');
 
 exports.createPost = async (req, res) => {
   try {
     const {title, content} = req.body;
+    const userId = req.user?.id;
 
     if (!title) {
       return res.status(400).send({
@@ -19,6 +21,7 @@ exports.createPost = async (req, res) => {
     await Post.create({
       title,
       content,
+      user_id: userId,
     });
 
     res.status(201).send({success: true});
