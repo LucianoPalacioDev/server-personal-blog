@@ -8,12 +8,14 @@ exports.createPost = async (req, res) => {
 
     if (!title) {
       return res.status(400).send({
+        success: false,
         message: 'Please, enter a not empty title!',
       });
     }
 
     if (!content) {
       return res.status(400).send({
+        success: false,
         message: 'Please, enter a not empty content!',
       });
     }
@@ -37,17 +39,33 @@ exports.updatePost = async (req, res) => {
   try {
     const id = req.params.id;
     const {title, content} = req.body;
+    const currentUserId = req.user?.id;
 
     if (!title) {
       return res.status(400).send({
+        success: false,
         message: 'Please, enter a not empty title!',
       });
     }
 
     if (!content) {
       return res.status(400).send({
+        success: false,
         message: 'Please, enter a not empty content!',
       });
+    }
+
+    const post = await Post.findOne({
+      where: {id: id},
+    });
+
+    if (!post) {
+      res.status(404).json({success: false, message: 'Post not found!'});
+      return;
+    }
+
+    if (post?.user_id !== currentUserId) {
+      return res.status(403).json({success: false, message: 'Not authorized to edit this post!'});
     }
 
     const [updated] = await Post.update(
@@ -76,6 +94,21 @@ exports.updatePost = async (req, res) => {
 exports.deletePost = async (req, res) => {
   try {
     const id = req.params.id;
+    const currentUserId = req.user?.id;
+
+    const post = await Post.findOne({
+      where: {id: id},
+    });
+
+    if (!post) {
+      res.status(404).json({success: false, message: 'Post not found!'});
+      return;
+    }
+
+    if (post?.user_id !== currentUserId) {
+      return res.status(403).json({success: false, message: 'Not authorized to delete this post!'});
+    }
+
     const deleted = await Post.destroy({
       where: {id: id},
     });
