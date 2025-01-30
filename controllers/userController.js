@@ -83,8 +83,9 @@ exports.login = async (req, res) => {
 
 exports.getUserDataById = async (req, res) => {
   try {
-    const userId = req.params.id;
-    const user = await User.findByPk(userId);
+    const currentUserId = req.user?.id;
+    const userIdOwner = req.params.id;
+    const user = await User.findByPk(userIdOwner);
 
     const formattedUserData = {
       id: user.id,
@@ -93,7 +94,13 @@ exports.getUserDataById = async (req, res) => {
     };
 
     if (user) {
-      res.status(200).send({success: true, user: formattedUserData});
+      res
+        .status(200)
+        .send({
+          success: true,
+          user: formattedUserData,
+          isOwner: currentUserId === Number(userIdOwner),
+        });
       return;
     }
     res

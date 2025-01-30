@@ -94,13 +94,15 @@ exports.deletePost = async (req, res) => {
 
 exports.getAllPostsByUser = async (req, res) => {
   try {
-    const userId = req.params.id;
+    const currentUserId = req.user?.id;
+    const userIdOwner = req.params.id;
     const posts = await Post.findAll({
       where: {
-        user_id: userId,
+        user_id: userIdOwner,
       },
     });
-    res.status(200).send({success: true, posts});
+
+    res.status(200).send({success: true, posts, isOwner: currentUserId === Number(userIdOwner)});
   } catch (error) {
     console.log('Error trying to get the all posts: ', error);
     res
