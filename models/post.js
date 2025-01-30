@@ -1,7 +1,5 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const {Model} = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Post extends Model {
     /**
@@ -29,5 +27,13 @@ module.exports = (sequelize, DataTypes) => {
       modelName: 'Post',
     },
   );
+
+  Post.associate = function (models) {
+    Post.belongsTo(models.User, {
+      foreignKey: 'user_id',
+      as: 'user',
+    });
+  };
+
   return Post;
 };
