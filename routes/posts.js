@@ -13,5 +13,10 @@ router.get(
   authenticateToken,
   postController.getAllPostsByUserFiltered,
 );
+router.get(
+  '/getPostsByUserFilteredPaginated/:id',
+  authenticateToken,
+  postController.getPostsByUserFilteredPaginated,
+);
 
 module.exports = router;

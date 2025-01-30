@@ -1,6 +1,8 @@
 const {Post} = require('../models');
 const {Op} = require('sequelize');
 
+const POST_PAGE_SIZE = 10;
+
 exports.createPost = async (req, res) => {
   try {
     const {title, content} = req.body;
@@ -158,8 +160,8 @@ exports.getAllPostsByUserFiltered = async (req, res) => {
       whereQuery = {
         ...whereQuery,
         [Op.or]: [
-          { title: { [Op.like]: `%${searchText}%` } },
-          { content: { [Op.like]: `%${searchText}%` } },
+          {title: {[Op.like]: `%${searchText}%`}},
+          {content: {[Op.like]: `%${searchText}%`}},
         ],
       };
     }
@@ -174,5 +176,52 @@ exports.getAllPostsByUserFiltered = async (req, res) => {
     res
       .status(400)
       .send({success: false, message: 'Something went wrong trying to get the all posts filtered'});
+  }
+};
+
+exports.getPostsByUserFilteredPaginated = async (req, res) => {
+  try {
+    const currentUserId = req.user?.id;
+    const userIdOwner = req.params.id;
+    const searchText = req.query.searchText;
+
+    const page = Number(req.query.page) || 1;
+    const limit = POST_PAGE_SIZE;
+    const offset = (page - 1) * limit;
+
+    let whereQuery = {
+      user_id: userIdOwner,
+    };
+
+    if (searchText) {
+      whereQuery = {
+        ...whereQuery,
+        [Op.or]: [
+          {title: {[Op.like]: `%${searchText}%`}},
+          {content: {[Op.like]: `%${searchText}%`}},
+        ],
+      };
+    }
+
+    const {count, rows: posts} = await Post.findAndCountAll({
+      where: whereQuery,
+      limit: limit,
+      offset: offset,
+    });
+
+    const hasMore = (offset + limit) < count;
+
+    res.status(200).send({
+      success: true,
+      posts,
+      isOwner: currentUserId === Number(userIdOwner),
+      hasMore: hasMore,
+    });
+  } catch (error) {
+    console.log('Error trying to get the all posts filtered and paginated: ', error);
+    res.status(400).send({
+      success: false,
+      message: 'Something went wrong trying to get the all posts filtered and paginated',
+    });
   }
 };
