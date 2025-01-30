@@ -50,9 +50,12 @@ exports.updatePost = async (req, res) => {
       });
     }
 
-    const [updated] = await Post.update({title, content}, {
-      where: {id: id},
-    });
+    const [updated] = await Post.update(
+      {title, content},
+      {
+        where: {id: id},
+      },
+    );
     if (updated) {
       res.status(200).json({success: true});
       return;
@@ -64,9 +67,9 @@ exports.updatePost = async (req, res) => {
     }
   } catch (error) {
     console.log('Error trying to update the post: ', error);
-      res
-        .status(500)
-        .json({success: false, message: 'Something went wrong trying to delete the post'});
+    res
+      .status(500)
+      .json({success: false, message: 'Something went wrong trying to delete the post'});
   }
 };
 
@@ -89,9 +92,14 @@ exports.deletePost = async (req, res) => {
   }
 };
 
-exports.getAllPosts = async (req, res) => {
+exports.getAllPostsByUser = async (req, res) => {
   try {
-    const posts = await Post.findAll();
+    const userId = req.user?.id;
+    const posts = await Post.findAll({
+      where: {
+        user_id: userId,
+      },
+    });
     res.status(200).send({success: true, posts});
   } catch (error) {
     console.log('Error trying to get the all posts: ', error);
