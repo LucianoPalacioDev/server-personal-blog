@@ -83,7 +83,7 @@ exports.login = async (req, res) => {
 
 exports.getUserDataById = async (req, res) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.params.id;
     const user = await User.findByPk(userId);
 
     const formattedUserData = {

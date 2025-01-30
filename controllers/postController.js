@@ -94,7 +94,7 @@ exports.deletePost = async (req, res) => {
 
 exports.getAllPostsByUser = async (req, res) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.params.id;
     const posts = await Post.findAll({
       where: {
         user_id: userId,
